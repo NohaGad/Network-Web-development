@@ -30,7 +30,7 @@ class UserFollowing(models.Model):
         return self.following_user_id.count()
 
 class Post(models.Model):
-    pots_text = models.TextField(max_length=1024)
+    post_text = models.TextField(max_length=1024)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="post")
     likers = models.ManyToManyField(User, blank=True, related_name="post_likes")
     created_at = models.DateTimeField(auto_now_add=True)

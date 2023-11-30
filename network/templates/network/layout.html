@@ -43,6 +43,13 @@
         
         <div class="body">
             {% block body %}
+                <div id="new-post-view">
+                    <h4>New Post</h4>
+                    <form id="new-post-form">
+                        <textarea class="form-control" id="new-post-body" placeholder="What's on your mind?"></textarea>
+                        <input type="submit" class="btn btn-primary" value="Post"/>
+                    </form>
+                </div>
             {% endblock %}
         </div>
     </body>

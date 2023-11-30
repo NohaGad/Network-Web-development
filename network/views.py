@@ -1,11 +1,22 @@
+import json
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
+from django.http import JsonResponse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from django.forms import ModelForm
 
-from .models import User
+from .models import User, UserFollowing, Post
 
+
+class NewPostForm(ModelForm):
+    class Meta:
+        model = Post
+        fields =['post_text','owner']
 
 def index(request):
     return render(request, "network/index.html")
@@ -61,3 +72,26 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+@csrf_exempt
+@login_required
+def new_post_view(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required."}, status=400)
+    data = json.loads(request.body)
+    post_text = data.get("post_text", "")
+
+    if post_text.len()==0:
+        return JsonResponse({"error": "you must write anything before submit"}, status=400)
+    else:
+        post = Post()
+        post.owner = request.user
+        form = NewPostForm(request.POST, instance = post)
+        if form.is_valid():
+            post.post_text = post_text
+            post.save()
+            return JsonResponse({"message": "Email sent successfully."}, status=201)
+        else:
+            return JsonResponse({"error": "error occured"}, status=400)
+    
+    
