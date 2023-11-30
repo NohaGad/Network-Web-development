@@ -76,7 +76,7 @@ def post_view(request):
     
     if request.method == "GET":
         page_number = request.GET.get('page',1)
-        items_per_page = 2
+        items_per_page = 10
         posts = Post.objects.all().order_by('-created_at')
 
         username = request.GET.get('username', None)
