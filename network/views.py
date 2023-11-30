@@ -9,14 +9,11 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.forms import ModelForm
+from django.core.paginator import Paginator, EmptyPage
+from django.db.models import Q
 
 from .models import User, UserFollowing, Post
 
-
-class NewPostForm(ModelForm):
-    class Meta:
-        model = Post
-        fields =['post_text','owner']
 
 def index(request):
     return render(request, "network/index.html")
@@ -75,23 +72,56 @@ def register(request):
 
 @csrf_exempt
 @login_required
-def new_post_view(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "POST request required."}, status=400)
-    data = json.loads(request.body)
-    post_text = data.get("post_text", "")
+def post_view(request):
+    
+    if request.method == "GET":
+        page_number = request.GET.get('page',1)
+        items_per_page = 2
+        posts = Post.objects.all().order_by('-created_at')
 
-    if post_text.len()==0:
-        return JsonResponse({"error": "you must write anything before submit"}, status=400)
-    else:
-        post = Post()
-        post.owner = request.user
-        form = NewPostForm(request.POST, instance = post)
-        if form.is_valid():
+        username = request.GET.get('username', None)
+        following = request.GET.get('following', None)
+        if username:
+            try:
+                owner = User.objects.get(username=username)
+                posts = posts.filter(owner=owner)
+            except User.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Invalid username'}, status=400)
+
+        if following:
+            following_user_ids = UserFollowing.objects.filter(user_id=request.user).values_list('following_user_id', flat=True)
+            posts = posts.filter(Q(owner__in=following_user_ids))
+
+
+        paginator = Paginator(posts, items_per_page)
+
+        try:
+            current_page = paginator.page(page_number)
+        except EmptyPage:
+            return JsonResponse({'status': 'error', 'message': 'Invalid page number'}, status=400)
+
+        serialized_posts = [post.serialize() for post in current_page]
+
+        data = {
+            'status': 'success',
+            'data': serialized_posts,
+            'has_next': current_page.has_next(),
+            'has_previous': current_page.has_previous(),
+            'total_pages': paginator.num_pages,
+            'current_page': current_page.number,
+        }
+        return JsonResponse(data, safe=False)
+        
+
+    elif request.method == "POST": 
+        data = request.POST
+        post_text = data.get("post_text", "")
+
+        if post_text == [""]:
+            return JsonResponse({"error": "you must write anything before submit"}, status=400)
+        else:
+            post = Post()
+            post.owner = request.user
             post.post_text = post_text
             post.save()
-            return JsonResponse({"message": "Email sent successfully."}, status=201)
-        else:
-            return JsonResponse({"error": "error occured"}, status=400)
-    
-    
+            return JsonResponse({"message": "Posted successfully."}, status=201)

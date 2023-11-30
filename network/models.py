@@ -38,6 +38,15 @@ class Post(models.Model):
     @property
     def total_likes (self):
         return self.likes.count()
+    
+    def serialize(self):
+        return {
+            "id": self.id,
+            "username": self.owner.username,
+            "post_text": self.post_text,
+            "created_at": self.created_at.strftime("%b %d %Y, %I:%M %p"),
+            "updated_at": self.updated_at.strftime("%b %d %Y, %I:%M %p"),
+        }
 
     class Meta:
         ordering = ['-created_at']
