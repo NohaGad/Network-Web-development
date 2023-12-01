@@ -2,8 +2,7 @@ import json
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import JsonResponse
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse ,HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
@@ -124,7 +123,10 @@ def post_view(request):
             post.owner = request.user
             post.post_text = post_text
             post.save()
-            return JsonResponse({"message": "Posted successfully."}, status=201)
+            return JsonResponse({
+                "message": "Posted successfully.",
+                "post":post.serialize()
+                }, status=201)
 
 @csrf_exempt
 @login_required
@@ -156,7 +158,10 @@ def post_edit(request, post_id):
                 post = get_object_or_404(Post, pk=post_id)
                 post.post_text = post_text
                 post.save()
-                return JsonResponse({"message": "Edited successfully."}, status=200)
+                return JsonResponse({
+                    "message": "Edited successfully.",
+                    "post":post.serialize()
+                    }, status=200)
         except json.JSONDecodeError as e:
             return JsonResponse({"error": f"Error decoding JSON: {str(e)}"}, status=400)
 
