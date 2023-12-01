@@ -168,4 +168,13 @@ def like_view(request, post_id):
         post.likers.add(request.user)
         post.save()
         return JsonResponse({"message": "the user likes post."}, status=200)
+
+@csrf_exempt
+@login_required
+def unlike_view(request, post_id):
+    post = get_object_or_404(Post , id= post_id)
+    if request.method == "POST":
+        post.likers.remove(request.user)
+        post.save()
+        return JsonResponse({"message": "the user unlikes post."}, status=200)
     
