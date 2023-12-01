@@ -21,13 +21,6 @@ class UserFollowing(models.Model):
                 check=~models.Q(user_id=models.F("following_user_id")))
         ]
         ordering = ["-created"]
-    @property
-    def count_following(self):
-        return self.user_id.count()
-    
-    @property
-    def count_followers(self):
-        return self.following_user_id.count()
 
 class Post(models.Model):
     post_text = models.TextField(max_length=1024)

@@ -125,3 +125,16 @@ def post_view(request):
             post.post_text = post_text
             post.save()
             return JsonResponse({"message": "Posted successfully."}, status=201)
+
+@login_required
+def follow_view(request):
+    if request.method == "GET":
+        user = request.user
+        following_count = UserFollowing.objects.filter(user_id=user).count()
+        followers_count = UserFollowing.objects.filter(following_user_id=user).count()
+        data = {
+            'status': 'success',
+            'following_count': following_count,
+            'followers_count': followers_count
+         }
+        return JsonResponse(data)
