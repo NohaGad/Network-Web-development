@@ -126,6 +126,7 @@ def post_view(request):
             post.save()
             return JsonResponse({"message": "Posted successfully."}, status=201)
 
+@csrf_exempt
 @login_required
 def follow_view(request):
     if request.method == "GET":
@@ -139,7 +140,8 @@ def follow_view(request):
          }
         return JsonResponse(data)
 
-
+@csrf_exempt
+@login_required
 def post_edit(request, post_id):
     if request.method == "PUT": 
         try:
@@ -157,3 +159,13 @@ def post_edit(request, post_id):
                 return JsonResponse({"message": "Edited successfully."}, status=200)
         except json.JSONDecodeError as e:
             return JsonResponse({"error": f"Error decoding JSON: {str(e)}"}, status=400)
+
+@csrf_exempt
+@login_required
+def like_view(request, post_id):
+    post = get_object_or_404(Post , id= post_id)
+    if request.method == "POST":
+        post.likers.add(request.user)
+        post.save()
+        return JsonResponse({"message": "the user likes post."}, status=200)
+    
