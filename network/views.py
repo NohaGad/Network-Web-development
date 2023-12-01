@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import JsonResponse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
@@ -138,3 +138,22 @@ def follow_view(request):
             'followers_count': followers_count
          }
         return JsonResponse(data)
+
+
+def post_edit(request, post_id):
+    if request.method == "PUT": 
+        try:
+            data = request.body.decode("utf-8")
+            json_data = json.loads(data)
+
+            post_text = json_data.get("post_text", "")
+
+            if post_text == "":
+                return JsonResponse({"error": "You must write anything before submitting."}, status=400)
+            else:
+                post = get_object_or_404(Post, pk=post_id)
+                post.post_text = post_text
+                post.save()
+                return JsonResponse({"message": "Edited successfully."}, status=200)
+        except json.JSONDecodeError as e:
+            return JsonResponse({"error": f"Error decoding JSON: {str(e)}"}, status=400)
